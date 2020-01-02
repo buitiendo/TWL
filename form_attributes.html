@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Form với các loại attributes, associations
+---
+# Giới thiệu về form:
+Form là phương thức trong Helper để tạo ra đoạn mã html, cho phép người dùng create hoặc update các thuộc tính của model cụ thể.
+ Form với các thuộc tính như: text_field, date_picker, radio_button...
+<br><br>
+&#160![](https://user-images.githubusercontent.com/43602883/71637855-b9554d00-2c81-11ea-8367-cd3b7b017fd5.png)
+
+---
+Check_box, text_area, select_box ...
+<br><br>
+![](https://user-images.githubusercontent.com/43602883/71637855-b9554d00-2c81-11ea-8367-cd3b7b017fd5.png)
+---
+
+# Associations
+Trong rails, association là liên kết giữa 2 model với nhau. Association giúp cho việc truy vấn dễ dàng và làm cho code ngắn gọn, đơn giản hơn rất nhiều.
+  Giả sử ta có 2 models là User và Profile, 1 user có nhiều profile và 1 profile chỉ thuộc 1 user.
+```ruby
+  class User < ApplicationRecord
+    has_many :profiles
+  end
+  
+  class Profile < ApplicationRecord
+    belongs_to :user
+  end
+```
+Khi chúng ta đã có 1 user hay 1 profile bất kỳ, việc tìm ra các profiles hay user của nó rất dễ dàng như sau:
+```ruby
+  user = User.first #giả sử user tồn tại
+  profiles = user.profiles
+```
+  hoặc
+```ruby
+  profile = Profile.first #giả sử profile tồn tại
+  user = profile.user
+```
+---
+# Các loại Associations
+Rails có hỗ trợ 6 loại như sau: belongs_to, has_one, has_many, has_many :through, has_one :through, has_and_belongs_to_many
+
+<strong>- The belongs_to association</strong><br>
+belongs_to thiết lập kết nối one-to-one (1-1) giữa model này với model khác. Ví dụ: khai báo trong model Profile
+```ruby
+  class User < ApplicationRecord
+    has_many :profiles
+  end
+  class Profile < ApplicationRecord
+    belongs_to :user
+  end
+```
+<strong>- The has_one Association</strong><br>
+has_one cũng thiết lập kết nối one-to-one với 1 model khác, nhưng nó khác nhau về mặt ý nghĩa.
+  Mối quan hệ này 
+   thấy 1 đối tượng của model này sở hữu 1 đối tượng của model khác. Ví dụ như ta có 2 đối tượng của 2 models là user và account, mỗi user chỉ có một account.
+```ruby
+  class User < ApplicationRecord
+    has_one :account
+  end
+```
+---
+<strong>- The has_many Association</strong><br>
+has_many thiết lập kết nối one-to-many với 1 model khác, đối tượng của model này có thể có 0 hoặc nhiều đối tượng của một model khác. 
+```ruby
+  class User < ApplicationRecord
+    has_many :profiles
+  end
+  class Profile < ApplicationRecord
+    belongs_to :user
+  end
+```
+<strong>- The has_many :through Association</strong><br>
+has_many:through association thiết lập mối quan hệ many-to-many (n-n) giữa 2 model. Giả sử có 2 model Student và Subject 1 học sinh có thể học nhiều môn và 1 môn học có thể có nhiều học sinh học. Với quan hệ n-n, chúng ta cần tạo ra 1 model thứ 3 (Result) ở giữa để trở thành 2 mối quan hệ 1-n.
+```ruby
+  class Student < ApplicationRecord
+    has_many :results
+    has_many :subjects, through: :results
+  end
+  class Result < ApplicationRecord
+    belongs_to :student
+    belongs_to :subject
+  end
+  class Subject < ApplicationRecord
+    has_many :results
+    has_many :students, through: :results
+  end
+```
+---
+<strong>- The has_one :through Association</strong><br>
+has_one :through association thiết lập quan hệ one-to-one giữa model này với model khác.
+  Quan hệ 1-1 giữa model này với 1 model khác thông qua 1 model thứ 3.
+    Giả sử nếu ta có model Supplier có quan hệ 1-1 với model Account và model Account có quan hệ 1-1 với AccountHistory.
+      Thông qua model Account ta có: ứng với 1 Supplier sẽ có 1 AccountHistory.
+```ruby
+  class Supplier < ApplicationRecord
+    has_one :account
+    has_one :account_history, through: :account
+  end
+  class Account < ApplicationRecord
+    belongs_to :supplier
+    has_one :account_history
+  end
+  class AccountHistory < ApplicationRecord
+    belongs_to :account
+  end
+```
+<strong>- The has_and_belongs_to_many Association</strong><br>
+has_and_belongs_to_many tạo ra một quan hệ n-n trực tiếp mà không có sự can thiệp của 1 model khác. Giả sử ta có model Student và Subject.
+  Ứng với 1 subject có nhiều students và 1 student có nhiều subjects
+```ruby
+  class Student < ApplicationRecord
+    has_and_belongs_to_many :subjects
+  end
+  class Subject < ApplicationRecord
+    has_and_belongs_to_many :students
+  end
+```
+---
+# Nested Attributes
+- Với nested attributes, chúng ta có thể lưu đồng thời lưu dữ liệu ở bảng user và bảng profile trong cùng 1 form mà không phải thêm nhiều form khác nhau.
+
+![](https://user-images.githubusercontent.com/43602883/71640206-0f44e780-2cb8-11ea-80ff-e26fc320e64e.png)
+---
+
+# Cách triển khai Nested Attributes
+- Associations:
+
+```ruby
+  class User < ApplicationRecord
+    has_many :profiles, dependent: :destroy, inverse_of: :user
+      accepts_nested_attributes_for :profiles,
+        allow_destroy: true, reject_if: :all_blank
+  end
+```
+```ruby
+  class Profile < ApplicationRecord
+    belongs_to :user, inverse_of: :profiles
+  end
+```
+chạy rails c:
+
+```ruby
+  user = User.create(name: "addd", email: "abc@gmail.com", city_id: 1)
+  profile = user.profiles.create(address: "test")
+  user = User.last
+  profile = user.profiles.first
+  user.profiles.first == profile
+```
+---
+- Allow_destroy : true có nghĩa là cho phép xóa bản ghi con, ỏ đây là xóa address khỏi user đó. để xóa được các nested attribute cần phải có _destroy trong params profile mới hoạt động được.
+- reject_if: all_bank : Nếu các trường Address bị trống thì nó sẽ không lưu bản ghi đó vào database.
+- dependent: :destroy : Khi xóa user thì profiles phụ thuộc sẽ bị xóa theo.
+- inverse_of: tối ưu hóa bộ nhớ khi truy cập các bản ghi liên kết. khi Gọi profile.user mà không thêm :inverse_of ở 2 quan hệ :belongs_to, :has_many.
+  Khi thực hiện so sánh, nó truy vấn lại vào db để tìm kiếm và so sánh. Với :inverse_of, nếu record user thực sự tồn tại trong db.
+  Khi chúng ta gọi profile.user sẽ trỏ về cùng một user.
+- Khi không sử dụng :inverse_of => Profile Load (0.5ms).
+```ruby
+  2.5.1 :008 > user.profiles.first == profile
+    Profile Load (0.5ms)  SELECT  "profiles".* FROM "profiles" WHERE "profiles"."user_id" = ? ORDER BY "profiles"."id" ASC LIMIT ?  [["user_id", 4], ["LIMIT", 1]]
+  => true 
+  2.5.1 :009 >
+```
+<br>Còn khi sử dụng :inverse_of => Profile Load (0.4ms)
+```ruby
+  2.5.1 :006 > user.profiles.first == profile
+  Profile Load (0.4ms)  SELECT  "profiles".* FROM "profiles" WHERE "profiles"."user_id" = ? ORDER BY "profiles"."id" ASC LIMIT ?  [["user_id", 4], ["LIMIT", 1]]
+  => true 
+  2.5.1 :007 >
+```
+---
+# sử dụng nested form dùng gem cocoon
+- Ưu điểm: dùng gem cocoon để nhanh chóng tạo nested form ngắn gọn, đơn giản hơn so với sử dụng javascript thuần. Người dùng có thể thêm 1 trường địa chỉ khác mà không cần load lại trang ngay trên trình duyệt.
+- nhược điểm: phụ thuộc vào jquery, cần thêm gem "jquery-rails" và require trong application.js.
+- Ngoài cách dùng gem "cocoon" còn có cách khác tạo nested form là sử dụng javascript thuần cũng cho kết quả tương tự. Có thể nested form nhưng cách làm này rườm ra và không hiệu quả do dùng javascript thuần.
+
+Add gem 'cocoon' và 'jquery-rails' vào gem file:
+
+```ruby
+  gem "jquery-rails"
+  gem "cocoon"
+```
+required trong application.js:
+```ruby
+  //= require jquery
+  //= require cocoon
+```
+---
+
+# Chuẩn bị
+- Database:
+
+```ruby
+  rails g scaffold City name:string
+  rails g model User name:string email:string dob:datetime height:float gender:boolean description:text role:boolean
+  rails g scaffold Profile address:string user_id:integer
+```
+
+![](https://user-images.githubusercontent.com/43602883/71654639-6b197a00-2d65-11ea-91ce-fa26a963eb09.png)
+
+---
+# View sử dụng form_for
+
+```ruby
+<%= form_for(@user) do |form| %>
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name, required: true, type: "number" %>
+  </div>
+  <div class="field">
+    <%= form.label :email %>
+    <%= form.text_field :email, :required => true, maxlength: 10 %>
+  </div>
+  <div class="field">
+    <%= form.label :dob %>
+    <%= form.date_field :dob %>
+  </div>
+  <div class="field">
+    <%= form.label :height %>
+    <%= form.text_field :height, in: 0.00..3.00, step: 0.01, type: "number" %>
+  </div>
+  <div class="field">
+    <%= form.label :role %>
+    <%= form.check_box :role %>
+  </div>
+```
+
+required: true bắt người dùng phải nhập vào field; type: "number" phải nhập kiểu số; maxlength: số ký tự tối đa được nhập; in: 0.00..3.00 là set value trong khoảng, với step là tăng giảm 0.01
+---
+```ruby
+  <div class="field">
+    <%= form.label :gender %><br />
+    <%= form.label :gender, "Male", value: true %>
+    <%= form.radio_button :gender, false, checked: true %>
+    <%= form.label :gender, "Female", value: false %>
+    <%= form.radio_button :gender, true %>
+  </div>
+  <%= form.fields_for :profiles do |profile| %>
+    <%= render "profile_fields", f: profile %>
+  <% end %>
+
+  <div class="links">
+    <%= link_to_add_association "Add address", form, :profiles, class: "btn btn-primary" %>
+  </div></br>
+```
+File _profile_field.html.erb
+
+```ruby
+<div class="nested-fields">
+  <%= f.label :address %>
+
+  <%= f.text_field :address, class: "form-control" %>
+  <%= link_to_remove_association "remove address", f, class: "btn btn-danger" %>
+</div></br>
+```
+checked: true để  hiển thi dấu check ngoài form view.
+link_to_association, chính là đường link để hiện ra form khác cần sử dụng, f là object mà form for đang sử dụng
+---
+```ruby
+  <div class="links">
+    <%= link_to_add_association "Add address", form, :profiles, class: "btn btn-primary" %>
+  </div></br>
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, cols: 19, rows: 3 %>
+  </div>
+  <div class="field">
+    <%= form.label :city_id %>
+    <%= form.select :city_id, City.all.collect {|c| [c.name, c.id]}, {include_blank: true} %>
+  </div>
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
+```
+cols: 19, rows: 3 set độ dài, rộng cho text_area, include_blank: true, thêm 1 dòng trống cho item đầu tiên của select_box.
+---
+- Github: https://github.com/buitiendo/form_attributes
+- db sau khi create form
+
+```ruby
+  2.5.1 :007 > User.last
+    User Load (0.1ms)  SELECT  "users".* FROM "users" ORDER BY "users"."id" DESC LIMIT ?  [["LIMIT", 1]]
+  => #<User id: 19, name: "1", email: "abc", dob: "2020-01-07 00:00:00", role: true, gender: false, description: "test", city_id: 1, created_at: "2020-01-07 04:01:19", updated_at: "2020-01-07 04:01:19"> 
+  2.5.1 :008 > Profile.all
+    Profile Load (0.4ms)  SELECT  "profiles".* FROM "profiles" LIMIT ?  [["LIMIT", 11]]
+  => #<ActiveRecord::Relation [#<Profile id: 18, address: "address 4", user_id: 19, created_at: "2020-01-07 04:01:19", updated_at: "2020-01-07 04:01:30">, #<Profile id: 19, address: "address 3", user_id: 19, created_at: "2020-01-07 04:01:19", updated_at: "2020-01-07 04:01:19">]> 
+  2.5.1 :009 >
+```
+<h1 class="center">Thank for your attention</h1>
+---
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
